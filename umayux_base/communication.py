@@ -55,23 +55,26 @@ class ReceiveDataThread(threading.Thread):
             elif msg[0] == "sense_body":
                 ws.sense_body = self.msg_to_sense_body(msg)
             elif msg[0] == "hear":
-                pass
+                if len(msg) >= 4 and msg[2] == "referee":
+                    ws.play_mode = msg[3]
             else:
                 print_msg(msg)
 
 
 class SendActionsThread(threading.Thread):
     def run(self):
+        ws = WorldState()
         while True:
-            ws = WorldState()
-            if ws.do:
-                ws.send(ws.do)
-            ws.send("(turn_neck %i)" % ws.turn_neck)
-            time.sleep(0.1)
+            if ws.play_mode == "play_on" or ws.play_mode.startswith("kick_off"):
+                if ws.do:
+                    ws.send(ws.do)
+                ws.send("(turn_neck %i)" % ws.turn_neck)
+                time.sleep(0.1)
 
 class UpdateTicThread(threading.Thread):
     def run(self):
+        ws = WorldState()
         while True:
-            ws = WorldState()
-            ws.tic += 1
-            time.sleep(0.1)
+            if ws.play_mode == "play_on":
+                ws.tic += 1
+                time.sleep(0.1)

@@ -9,7 +9,7 @@ class DecisionTreeStrategy(StrategyBase):
         # self.cur_action = self.some_function
         raise NotImplementedError
 
-    def strategy(self):
+    def play_on(self):
         if self.cur_action is None:
             self.make_decision()
         while not self.cur_action():
@@ -43,16 +43,18 @@ class SampleDecisionTreeStrategy(DecisionTreeStrategy):
     def go_to_ball(self):
         if not self.can_see_ball() or self.ball_is_near():
             return False
-        print "stamina", self.ws.sense_body["stamina"]
         if abs(self.ws.see.ball.direction) > 5:
             self.ws.do = "(turn " + str(self.ws.see.ball.direction/4) + ")"
         else:
             self.ws.do = "(dash 100)"
         return True
 
-    # LOGIC
-    cur_action = None
+    
+    x = -10
+    y = 10
+    
 
+    # LOGIC
     def make_decision(self):
         if self.can_see_ball():
             if self.ball_is_near():

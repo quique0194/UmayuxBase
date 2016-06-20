@@ -9,16 +9,15 @@ from communication import ReceiveDataThread, SendActionsThread, UpdateTicThread
 
 class StrategyBase(object):
     ws = WorldState()
-    x = 20.0
+    x = -1.0
     y = 0.0
 
-    def get_initial_position(self):
+    def get_initial_position(self, kick_off_side="l"):
         return self.x, self.y
 
-    def move_to_initial_position(self):
-        x, y = self.get_initial_position()
-        if self.ws.side == "l":
-            x = -x
+    def move_to_initial_position(self, kick_off_side="l"):
+        x, y = self.get_initial_position(kick_off_side)
+        print self.ws.side, x, y
         self.ws.send("(move %f %f)" % (x, y))
 
     def select_team_name(self):
@@ -40,11 +39,23 @@ class StrategyBase(object):
         self.ws.play_mode = msg[3]
         print "Side:", self.ws.side, ", Unum:", self.ws.unum
 
+        self.move_to_initial_position(kick_off_side="l")
+
+    def play_on(self):
+        self.ws.do = "(turn 50)"
+
+    def kick_in(self):
         self.move_to_initial_position()
 
-    def strategy(self):
-        self.ws = WorldState()
-        self.ws.do = "(turn 50)"
+    def kick_off(self, side="l"):
+        if self.ws.side == side:
+            self.ws.do = "(kick 10 90)"
+
+    def goal(self):
+        self.move_to_initial_position()
+
+    def goal_kick(self):
+        self.move_to_initial_position()
 
     def run(self):
         # INIT
@@ -62,9 +73,11 @@ class StrategyBase(object):
         update_tic_thread.start()
 
         # STRATEGY
-        while self.ws.see is None:
-            pass
-
         while True:
-            self.strategy()
+            if self.ws.play_mode == "play_on":
+                self.play_on()
+            elif self.ws.play_mode == "kick_off_" + self.ws.side:
+                self.kick_off()
+            elif self.ws.play_mode.startswith("goal"):
+                self.goal()
             time.sleep(0.05)

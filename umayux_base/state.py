@@ -42,5 +42,5 @@ class WorldState(object):
     }
 
     # Action to do next
-    do = "(turn 50)"
+    do = "" # "(turn 50)"
     turn_neck = 0
