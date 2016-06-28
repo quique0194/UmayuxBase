@@ -29,7 +29,7 @@ class WorldState(object):
     tic = 0
     side = ""
     unum = 0
-    play_mode = "before_kick_off"
+    play_mode = "" #"before_kick_off"
     see = None      # See object
     sense_body = {
         "view_mode": ["high", "normal"],

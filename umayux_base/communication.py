@@ -19,6 +19,8 @@ class Goals(object):
 class See(object):
     ball = None
     goal = Goals()
+    mates = []
+    opponents = []
 
 class ReceiveDataThread(threading.Thread):
     def msg_to_sense_body(self, msg):
@@ -34,6 +36,7 @@ class ReceiveDataThread(threading.Thread):
 
     def msg_to_see(self, msg):
         see = See()
+        ws = WorldState()
         for i in msg[2:]:
             if i[0][0] == "ball":
                 see.ball = Something(i[1], i[2])
@@ -42,13 +45,18 @@ class ReceiveDataThread(threading.Thread):
                     see.goal.r = Something(i[1], i[2])
                 else:
                     see.goal.l = Something(i[1], i[2])
+            elif i[0][0] == "player":
+                if len(i[0]) >= 2 and len(i) >= 3:
+                    if i[0][1] == ws.team_name:
+                        see.mates.append(Something(i[1], i[2]))
+                    else:
+                        see.opponents.append(Something(i[1], i[2]))
         return see
 
     def run(self):
         while True:
             ws = WorldState()
             msg =  parse(ws.recv())
-            # print_msg(msg)
             if msg[0] == "see":
                 ws.see = self.msg_to_see(msg)
                 ws.tic = msg[1]
@@ -62,10 +70,27 @@ class ReceiveDataThread(threading.Thread):
 
 
 class SendActionsThread(threading.Thread):
+    def send_action_in_play_mode(self,play_mode):
+        return play_mode in (
+            "before_kick_off",
+            "play_on",
+            "kick_off_l",
+            "kick_off_r",
+            "kick_in_l",
+            "kick_in_r",
+            "free_kick_l",
+            "free_kick_r",
+            "corner_kick_l",
+            "corner_kick_r",
+            "goal_kick_l",
+            "goal_kick_r",
+            "goal_l",
+            "goal_r",
+        )
     def run(self):
         ws = WorldState()
         while True:
-            if ws.play_mode == "play_on" or ws.play_mode.startswith("kick_off"):
+            if self.send_action_in_play_mode(ws.play_mode):
                 if ws.do:
                     ws.send(ws.do)
                 ws.send("(turn_neck %i)" % ws.turn_neck)
