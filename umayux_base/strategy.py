@@ -17,8 +17,9 @@ class StrategyBase(object):
 
     def move_to_initial_position(self, kick_off_side="l"):
         x, y = self.get_initial_position(kick_off_side)
-        print self.ws.side, x, y
+        print "####################### move to initial position:", self.ws.side, x, y
         self.ws.send("(move %f %f)" % (x, y))
+        self.ws.position = x, y
 
     def select_team_name(self):
         opts, args = getopt.getopt(sys.argv[1:],"ht:",["help", "team="])
@@ -31,10 +32,15 @@ class StrategyBase(object):
 
     def init(self):
         self.select_team_name()
-
-        self.ws.send("(init %s)" % self.ws.team_name)
-        msg =  parse(self.ws.recv())
+        data = self.ws.init("(init %s (version 15.2))" % self.ws.team_name)
+        msg = parse(data)
         self.ws.side = msg[1]
+        if self.ws.side == "l":
+            self.ws.opp_goal = [52.5, 0.0]
+            self.ws.my_goal = [-52.5, 0.0]
+        else:
+            self.ws.opp_goal = [-52.5, 0.0]
+            self.ws.my_goal = [52.5, 0.0]
         self.ws.unum = msg[2]
         self.ws.play_mode = msg[3]
         print "Side:", self.ws.side, ", Unum:", self.ws.unum
@@ -65,6 +71,7 @@ class StrategyBase(object):
         self.move_to_initial_position()
 
     def goal(self, side="l"):
+        time.sleep(0.1)
         self.move_to_initial_position()
 
 
@@ -76,7 +83,7 @@ class StrategyBase(object):
             self.kick_off()
         elif self.ws.play_mode == "before_kick_off" and self.ws.see is not None:
             self.before_kick_off()
-        elif self.ws.play_mode == "goal_l" or self.ws.play_mode == "goal_r":
+        elif self.ws.play_mode.startswith("goal_"):
             self.goal(self.ws.play_mode[-1])
 
     def run_strategy(self):

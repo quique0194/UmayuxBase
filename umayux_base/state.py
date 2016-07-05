@@ -18,10 +18,15 @@ class WorldState(object):
     # Comunication state
     server = ("127.0.0.1", 6000)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    def init(self, msg):
+        self.sock.sendto(msg+"\0", self.server)
+        data, addr = self.sock.recvfrom(10000)
+        self.server = addr
+        return data
     def send(self, msg):
-        self.sock.sendto(msg, self.server)
+        self.sock.sendto(msg+"\0", self.server)
     def recv(self):
-        data, addr = self.sock.recvfrom(1024)
+        data, addr = self.sock.recvfrom(10000)
         return data
 
     # Player state
@@ -29,7 +34,7 @@ class WorldState(object):
     tic = 0
     side = ""
     unum = 0
-    play_mode = "" #"before_kick_off"
+    play_mode = "" # "before_kick_off"
     see = None      # See object
     sense_body = {
         "view_mode": ["high", "normal"],
@@ -40,6 +45,9 @@ class WorldState(object):
         "turn": 0,
         "say": 0
     }
+
+    position = None # [0.0, 0.0]
+    orientation = 0.0
 
     # Action to do next
     do = "" # "(turn 50)"

@@ -1,6 +1,6 @@
-def print_msg(data):
-    print ""
-    print "SEE MESSAGE:"
+def print_list(data):
+    print "#########################################"
+    print "LIST:"
     print ""
     for i in data:
         print i

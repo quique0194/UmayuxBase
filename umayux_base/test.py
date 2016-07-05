@@ -1,27 +1,13 @@
-import socket
-import time
-import threading
-import signal
-import sys
+import math
+import theano
+import theano.tensor as T
+from theano import function
+from theano import shared
 
-def singleton(cls):
-    obj = cls()
-    # Always return the same object
-    cls.__new__ = staticmethod(lambda cls: obj)
-    # Disable __init__
-    try:
-        del cls.__init__
-    except AttributeError:
-        pass
-    return cls
+s = shared(10.0)
+inc = T.dscalar('inc')
 
+f = function([inc], s, updates=[(s, s+inc)])
 
-@singleton
-class Hola(object):
-    A = 2
-    B = 3
-
-h = Hola()
-h.A = 34
-i = Hola()
-print h.A, i.A
+print f(5)
+print s.get_value()
