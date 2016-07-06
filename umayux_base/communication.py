@@ -55,7 +55,7 @@ class ReceiveDataThread(threading.Thread):
                     see.goal.mine = Something(i[1], i[2])
             elif i[0][0] == "p": # player
                 if len(i[0]) >= 2 and len(i) >= 3:
-                    if i[0][1] == ws.team_name:
+                    if i[0][1][1:-1] == ws.team_name: # [1:-1] is to remove quotes
                         see.mates.append(Something(i[1], i[2]))
                     else:
                         see.opponents.append(Something(i[1], i[2]))
@@ -94,6 +94,8 @@ class ReceiveDataThread(threading.Thread):
             return "goalie_catch_ball", pm[-1]
         elif pm.startswith("back_pass_"):
             return "back_pass", pm[-1]
+        elif pm.startswith("catch_fault_")
+            return "catch_fault", pm[-1]
         else:
             print "##### WARNING: play_mode not recognized:", pm
             raise Exception("This should never happen")
@@ -133,7 +135,7 @@ class ReceiveDataThread(threading.Thread):
             elif msg[0] == "change_player_type":
                 pass
             else:
-                print "$$$$$$$$$$$$$$$$ Unknown message type:", msg
+                print "############# WARNING (Unknown message type):", msg
 
 
 class SendActionsThread(threading.Thread):

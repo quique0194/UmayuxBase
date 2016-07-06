@@ -61,29 +61,18 @@ class StrategyBase(object):
         else:
             raise Exception("ERROR: Wrong side:", side)
 
-    # PLAY MODES
-    def before_kick_off(self, side="l"):
+    # PLAY MODES TO OVERWRITE
+    def playing(self):
         pass
 
-    def play_on(self):
-        self.ws.do = "(turn 50)"
-
-    def kick_off(self, side="l"):
-        if self.ws.side == side:
-            self.ws.do = "(kick 10 90)"
-
-    def kick_in(self):
-        self.move_to_initial_position()
-
-    def free_kick(self, side="l"):
+    def waiting(self):
         pass
 
-    def corner_kick(self, side="l"):
+    def free_kick(self):
         pass
 
-    def goal_kick(self):
-        self.move_to_initial_position()
 
+    # PLAY MODES NOT TO OVERWRITE
     def goal(self, side="l"):
         time.sleep(0.1)
         self.move_to_initial_position(self.change_side(side))
@@ -91,22 +80,47 @@ class StrategyBase(object):
 
 
     def choose_play_mode(self):
-        if self.ws.play_mode == "play_on":
-            self.play_on()
-        elif self.ws.play_mode == "kick_off":
-            self.kick_off(self.ws.play_mode_side)
-        elif self.ws.play_mode == "before_kick_off" and self.ws.see is not None:
-            self.before_kick_off(self.ws.play_mode_side)
+        playing_modes = (
+            "play_on",
+        )
+        waiting_modes = (
+            "before_kick_off",
+            "time_over",
+            "drop_ball",
+            "offside",
+            "goalie_catch_ball",
+            "back_pass",
+            "catch_fault",
+        )
+        free_kick_modes = (
+            "kick_off",
+            "kick_in",
+            "free_kick",
+            "corner_kick",
+            "goal_kick",
+        )
+        if self.ws.play_mode in playing_modes:
+            self.playing()
+        elif self.ws.play_mode in waiting_modes:
+            self.waiting()
+        elif self.ws.play_mode in free_kick_modes:
+            if self.ws.play_mode_side == self.ws.side:
+                self.free_kick()
+            else:
+                self.waiting()
         elif self.ws.play_mode == "goal":
             self.goal(self.ws.play_mode_side)
+        else:
+            raise Exception("This should never happen")
 
     def run_strategy(self):
         while True:
-            self.ws.see_lock.acquire()
-            try:
-                self.choose_play_mode()
-            finally:
-                self.ws.see_lock.release()
+            if self.ws.see is not None:
+                self.ws.see_lock.acquire()
+                try:
+                    self.choose_play_mode()
+                finally:
+                    self.ws.see_lock.release()
             time.sleep(0.05)
 
     def run(self):

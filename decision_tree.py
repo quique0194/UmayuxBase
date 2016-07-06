@@ -12,12 +12,9 @@ class DecisionTreeBase(StrategyBase):
         self.ws.do = ""
 
     def choose_play_mode(self):
+        self.cur_action = self.ll_do_nothing
         super(DecisionTreeBase, self).choose_play_mode()
-        if self.ws.play_mode == "goal":
-            self.cur_action = self.ll_do_nothing
-        else:
-            self.cur_action()
-
+        self.cur_action()
 
 
 class DecisionTreeStrategy(DecisionTreeBase):
@@ -27,6 +24,9 @@ class DecisionTreeStrategy(DecisionTreeBase):
 
     def ball_is_near(self, dist=0.7):
         return self.can_see_ball() and self.ws.see.ball.distance <= dist
+
+    def i_am_the_closest_to_ball(self):
+        return self.ws.unum == 3
 
     # LOW LEVEL ACTIONS
     def ll_look_for_ball(self):
@@ -56,7 +56,10 @@ class DecisionTreeStrategy(DecisionTreeBase):
                 self.ll_do_nothing()
 
     def ll_kick_off(self):
-        self.ws.do = "(kick 40 135)"
+        if abs(self.ws.orientation) < 5:
+            self.ws.do = "(kick 40 135)"
+        else:
+            self.ws.do = "(turn %d)" % (-self.ws.orientation/2.0, )
 
     def ll_kick_to_goal(self):
         if self.ws.see.goal.opp is not None:
@@ -68,10 +71,15 @@ class DecisionTreeStrategy(DecisionTreeBase):
         angle = normalize_angle(angle)
         self.ws.do = "(kick %d %d)" % (power, angle)
 
-    def ll_pass_to_closer_mate(self):
-        mate = self.ws.see.mates[0]
-        angle = mate.direction
-        self.ws.do = "(kick 100 %d)" % angle
+    def ll_pass_to_closest_mate(self):
+        # mate = self.ws.see.mates[0]
+        # angle = mate.direction
+        print self.ws.see.mates
+        if len(self.ws.see.mates) == 0:
+            self.ws.do = "(turn 30)"
+        else:
+            angle = self.ws.see.mates[0].direction
+            self.ws.do = "(kick 100 %d)" % angle
 
     def ll_go_to_ball(self):
         if abs(self.ws.see.ball.direction) > 5:
@@ -85,10 +93,10 @@ class DecisionTreeStrategy(DecisionTreeBase):
 
     # HIGH LEVEL ACTIONS
     # Set cur_action
-    def hl_pass_to_closer_mate(self):
+    def hl_pass_to_closest_mate(self):
         if self.can_see_ball():
             if self.ball_is_near():
-                self.cur_action = self.ll_kick
+                self.cur_action = self.ll_pass_to_closest_mate
             else:
                 self.cur_action = self.ll_go_to_ball
         else:
@@ -129,12 +137,12 @@ class DecisionTreeStrategy(DecisionTreeBase):
     def get_initial_position(self, kick_off_side="l"):
         if self.ws.unum == 1:
             return -50, 0
-        elif self.ws.unum == 2:
+        elif self.ws.unum == 3:
             if self.ws.side == kick_off_side:
                 return -0.1, 0
             else:
                 return -10, 5
-        elif self.ws.unum == 3:
+        elif self.ws.unum == 2:
             if self.ws.side == kick_off_side:
                 return -7, 7
             else:
@@ -144,7 +152,7 @@ class DecisionTreeStrategy(DecisionTreeBase):
             sys.exit(0)
 
     # PLAY_MODES
-    def play_on(self):
+    def playing(self):
         if self.ws.side == "r" and self.ws.unum == 3:
             self.hl_kick_to_goal()
         elif self.ws.unum == 1:
@@ -152,15 +160,14 @@ class DecisionTreeStrategy(DecisionTreeBase):
         else:
             self.hl_look_for_ball()
 
-    def before_kick_off(self, side="l"):
-        if self.ws.side == side and self.ws.unum == 2:
-            self.hl_point_to_opp_goal()
-        else:
-            self.hl_look_for_ball()
+    def waiting(self):
+        self.hl_look_for_ball()
 
-    def kick_off(self, side="l"):
-        if self.ws.side == side and self.ws.unum == 2:
+    def free_kick(self):
+        if self.ws.play_mode == "kick_off" and self.ws.play_mode_side == self.ws.side:
             self.hl_kick_off()
+        elif self.i_am_the_closest_to_ball():
+            self.hl_pass_to_closest_mate()
         else:
             self.hl_look_for_ball()
 
