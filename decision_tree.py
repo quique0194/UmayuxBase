@@ -40,8 +40,18 @@ class DecisionTreeStrategy(DecisionTreeBase):
             self.ws.do = "(turn 30)"
         else:
             if self.ws.see.goal.opp.direction > 5:
-                print "Dir to goal", self.ws.see.goal.opp.direction
+                print "Point to goal", self.ws.see.goal.opp.direction
                 self.ws.do = "(turn %d)" % (self.ws.see.goal.opp.direction/2.0,)
+            else:
+                self.ll_do_nothing()
+
+    def ll_point_to_ball(self):
+        if self.ws.see.ball is None:
+            self.ws.do = "(turn 30)"
+        else:
+            if self.ws.see.ball.direction > 5:
+                print "Point to ball", self.ws.see.ball.direction
+                self.ws.do = "(turn %d)" % (self.ws.see.ball.direction/2.0,)
             else:
                 self.ll_do_nothing()
 
@@ -68,6 +78,9 @@ class DecisionTreeStrategy(DecisionTreeBase):
             self.ws.do = "(turn " + str(self.ws.see.ball.direction/2.0) + ")"
         else:
             self.ws.do = "(dash 100)"
+
+    def ll_catch_ball(self):
+        self.ws.do = "(catch %d)" % self.ws.see.ball.direction
 
 
     # HIGH LEVEL ACTIONS
@@ -99,6 +112,19 @@ class DecisionTreeStrategy(DecisionTreeBase):
         else:
             self.cur_action = self.ll_look_for_ball
 
+    def hl_goalie(self):
+        if self.can_see_ball():
+            if self.ball_is_near(0.7):
+                self.cur_action = self.ll_catch_ball
+            else:
+                if self.ball_is_near(20):
+                    self.cur_action = self.ll_go_to_ball
+                else:
+                    self.ll_point_to_ball
+        else:
+            self.cur_action = self.ll_look_for_ball
+
+
     # POSITION
     def get_initial_position(self, kick_off_side="l"):
         if self.ws.unum == 1:
@@ -121,6 +147,8 @@ class DecisionTreeStrategy(DecisionTreeBase):
     def play_on(self):
         if self.ws.side == "r" and self.ws.unum == 3:
             self.hl_kick_to_goal()
+        elif self.ws.unum == 1:
+            self.hl_goalie()
         else:
             self.hl_look_for_ball()
 

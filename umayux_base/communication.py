@@ -73,6 +73,8 @@ class ReceiveDataThread(threading.Thread):
             return pm, None
         elif pm == "time_over":
             return pm, None
+        elif pm == "drop_ball":
+            return pm, None
 
         elif pm.startswith("kick_off_"):
             return "kick_off", pm[-1]
@@ -88,6 +90,10 @@ class ReceiveDataThread(threading.Thread):
             return "offside", pm[-1]
         elif pm.startswith("goal_"):
             return "goal", pm[5]
+        elif pm.startswith("goalie_catch_ball_"):
+            return "goalie_catch_ball", pm[-1]
+        elif pm.startswith("back_pass_"):
+            return "back_pass", pm[-1]
         else:
             print "##### WARNING: play_mode not recognized:", pm
             raise Exception("This should never happen")

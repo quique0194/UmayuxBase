@@ -26,7 +26,7 @@ while [ $i -le 2 ]; do
     i=`expr $i + 1`
 done
 
-trap "killall python; killall rcssmonitor; killall rcsoccersim;" SIGINT
+trap "killall python; killall rcssmonitor; killall -9 rcssserver;" SIGINT
 
 wait
 rm *.rcg *.rcl
