@@ -16,8 +16,8 @@ class Something(object):
     __repr__ = __str__
 
 class Goals(object):
-    r = None
-    l = None
+    opp = None
+    mine = None
 
 class See(object):
     def __init__(self):
@@ -49,10 +49,10 @@ class ReceiveDataThread(threading.Thread):
             elif i[0][0] == "g": # goal
                 key = i[0][1]
                 see.flags[key] = Something(i[1], i[2])
-                if key == "r":
-                    see.goal.r = Something(i[1], i[2])
+                if key != ws.side:
+                    see.goal.opp = Something(i[1], i[2])
                 else:
-                    see.goal.l = Something(i[1], i[2])
+                    see.goal.mine = Something(i[1], i[2])
             elif i[0][0] == "p": # player
                 if len(i[0]) >= 2 and len(i) >= 3:
                     if i[0][1] == ws.team_name:
@@ -65,20 +65,57 @@ class ReceiveDataThread(threading.Thread):
                 see.flags[key] = Something(i[1], i[2])
         return see
 
+    def msg_to_play_mode(self, msg):
+        pm = msg[3]
+        if pm == "before_kick_off":
+            return pm, None
+        elif pm == "play_on":
+            return pm, None
+        elif pm == "time_over":
+            return pm, None
+
+        elif pm.startswith("kick_off_"):
+            return "kick_off", pm[-1]
+        elif pm.startswith("kick_in_"):
+            return "kick_in", pm[-1]
+        elif pm.startswith("free_kick_"):
+            return "free_kick", pm[-1]
+        elif pm.startswith("corner_kick_"):
+            return "corner_kick", pm[-1]
+        elif pm.startswith("goal_kick_"):
+            return "goal_kick", pm[-1]
+        elif pm.startswith("offside_"):
+            return "offside", pm[-1]
+        elif pm.startswith("goal_"):
+            return "goal", pm[5]
+        else:
+            print "##### WARNING: play_mode not recognized:", pm
+            raise Exception("This should never happen")
+
     def run(self):
         ws = WorldState()
         while True:
             msg =  parse(ws.recv())
             if msg[0] == "see":
+                ws.see_lock.acquire()
                 ws.see = self.msg_to_see(msg)
                 ws.tic = msg[1]
-                ws.position = triangulate_position(ws.see.flags, ws.position)
-                ws.orientation = calculate_orientation(ws.see.flags, ws.position) or ws.orientation
+                pos = triangulate_position(ws.see.flags, ws.position)
+                co = calculate_orientation(ws.see.flags, ws.position)
+                ws.orientation = co or ws.orientation
+                if ws.side == "r":
+                    ws.position = [-pos[0], -pos[1]]
+                    ws.orientation += 180.0
+                else:
+                    ws.position = pos
+                ws.see_lock.release()
             elif msg[0] == "sense_body":
                 ws.sense_body = self.msg_to_sense_body(msg)
             elif msg[0] == "hear":
                 if len(msg) >= 4 and msg[2] == "referee":
-                    ws.play_mode = msg[3]
+                    pm, pms = self.msg_to_play_mode(msg)
+                    ws.play_mode = pm
+                    ws.play_mode_side = pms or ws.play_mode_side
             elif msg[0] == "warning":
                 print "################ WARNING:", msg[1]
             elif msg[0] == "player_type":
@@ -98,16 +135,11 @@ class SendActionsThread(threading.Thread):
         return play_mode in (
             "before_kick_off",
             "play_on",
-            "kick_off_l",
-            "kick_off_r",
-            "kick_in_l",
-            "kick_in_r",
-            "free_kick_l",
-            "free_kick_r",
-            "corner_kick_l",
-            "corner_kick_r",
-            "goal_kick_l",
-            "goal_kick_r",
+            "kick_off",
+            "kick_in",
+            "free_kick",
+            "corner_kick",
+            "goal_kick",
         )
     def run(self):
         ws = WorldState()

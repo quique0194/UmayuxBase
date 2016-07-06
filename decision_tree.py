@@ -13,12 +13,10 @@ class DecisionTreeBase(StrategyBase):
 
     def choose_play_mode(self):
         super(DecisionTreeBase, self).choose_play_mode()
-        # if self.ws.side == "l" and self.ws.unum == 3:
-        #     print self.ws.tic, self.cur_action.__name__
-        if self.ws.play_mode != "goal_l" and self.ws.play_mode != "goal_r":
-            self.cur_action()
-        else:
+        if self.ws.play_mode == "goal":
             self.cur_action = self.ll_do_nothing
+        else:
+            self.cur_action()
 
 
 
@@ -37,12 +35,22 @@ class DecisionTreeStrategy(DecisionTreeBase):
         else:
             self.ws.do = "(turn 30)"
 
+    def ll_point_to_opp_goal(self):
+        if self.ws.see.goal.opp is None:
+            self.ws.do = "(turn 30)"
+        else:
+            if self.ws.see.goal.opp.direction > 5:
+                print "Dir to goal", self.ws.see.goal.opp.direction
+                self.ws.do = "(turn %d)" % (self.ws.see.goal.opp.direction/2.0,)
+            else:
+                self.ll_do_nothing()
+
     def ll_kick_off(self):
         self.ws.do = "(kick 40 135)"
 
     def ll_kick_to_goal(self):
-        if self.ws.see.goal.r is not None:
-            angle = self.ws.see.goal.r.direction
+        if self.ws.see.goal.opp is not None:
+            angle = self.ws.see.goal.opp.direction
             power = 100
         else:
             angle = -angle_to(self.ws.position, self.ws.opp_goal) - self.ws.orientation
@@ -79,6 +87,9 @@ class DecisionTreeStrategy(DecisionTreeBase):
     def hl_look_for_ball(self):
         self.cur_action = self.ll_look_for_ball
 
+    def hl_point_to_opp_goal(self):
+        self.cur_action = self.ll_point_to_opp_goal
+
     def hl_kick_to_goal(self):
         if self.can_see_ball():
             if self.ball_is_near():
@@ -91,7 +102,7 @@ class DecisionTreeStrategy(DecisionTreeBase):
     # POSITION
     def get_initial_position(self, kick_off_side="l"):
         if self.ws.unum == 1:
-            return -40, 30
+            return -50, 0
         elif self.ws.unum == 2:
             if self.ws.side == kick_off_side:
                 return -0.1, 0
@@ -108,13 +119,16 @@ class DecisionTreeStrategy(DecisionTreeBase):
 
     # PLAY_MODES
     def play_on(self):
-        if self.ws.side == "l" and self.ws.unum == 3:
+        if self.ws.side == "r" and self.ws.unum == 3:
             self.hl_kick_to_goal()
         else:
             self.hl_look_for_ball()
 
     def before_kick_off(self, side="l"):
-        self.hl_look_for_ball()
+        if self.ws.side == side and self.ws.unum == 2:
+            self.hl_point_to_opp_goal()
+        else:
+            self.hl_look_for_ball()
 
     def kick_off(self, side="l"):
         if self.ws.side == side and self.ws.unum == 2:

@@ -1,5 +1,4 @@
 from math import sqrt
-from utils import print_list
 from flag_positions import flag_positions
 from mymath import dist, angle_to
 
@@ -136,11 +135,8 @@ if __name__ == "__main__":
     ip = intersect_circles
     ipe = intersect_circles_with_error
 
-    i = ip((0,0), (1, 0), 2, 2)
-    s = ip((0,0), (4, 0), 2, 2)
-
-    print "Intersection:", i
+    print "Intersection:", ip((0,0), (1, 0), 2, 2)
     print "Wholly inside:", ip((0,0), (1, 0), 5, 2)
-    print "Single-point edge collision:", s
+    print "Single-point edge collision:", ip((0,0), (4, 0), 2, 2)
     print "No collision:", ip((0,0), (5, 0), 2, 2)
     print "Intersection with error:", ipe((2,0), (1,0), 2, 0.9)

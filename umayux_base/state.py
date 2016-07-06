@@ -1,3 +1,4 @@
+import threading
 import socket
 
 
@@ -34,7 +35,10 @@ class WorldState(object):
     tic = 0
     side = ""
     unum = 0
+    goalie = False
     play_mode = "" # "before_kick_off"
+    play_mode_side = "l" # left is first to kick off
+    see_lock = threading.Lock()
     see = None      # See object
     sense_body = {
         "view_mode": ["high", "normal"],
@@ -48,6 +52,10 @@ class WorldState(object):
 
     position = None # [0.0, 0.0]
     orientation = 0.0
+
+
+    opp_goal = [52.5, 0.0]
+    my_goal = [-52.5, 0.0]
 
     # Action to do next
     do = "" # "(turn 50)"
