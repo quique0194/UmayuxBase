@@ -94,7 +94,7 @@ class ReceiveDataThread(threading.Thread):
             return "goalie_catch_ball", pm[-1]
         elif pm.startswith("back_pass_"):
             return "back_pass", pm[-1]
-        elif pm.startswith("catch_fault_")
+        elif pm.startswith("catch_fault_"):
             return "catch_fault", pm[-1]
         else:
             print "##### WARNING: play_mode not recognized:", pm

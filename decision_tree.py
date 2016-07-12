@@ -1,10 +1,10 @@
 import sys
 import time
-from umayux_base.strategy import StrategyBase
+from umayux_base.simplified_strategy import SimplifiedStrategy
 from umayux_base.position import angle_to
 from umayux_base.mymath import angle_to, normalize_angle
 
-class DecisionTreeBase(StrategyBase):
+class DecisionTreeBase(SimplifiedStrategy):
     def ll_do_nothing(self):
         self.ws.do = ""
 

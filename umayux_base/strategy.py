@@ -63,13 +63,16 @@ class StrategyBase(object):
 
     # PLAY MODES TO OVERWRITE
     def playing(self):
-        pass
+        self.ws.do = "(turn 20)"
+        self.ws.turn_neck = 0
 
     def waiting(self):
-        pass
+        self.ws.do = "(turn 20)"
+        self.ws.turn_neck = 0
 
     def free_kick(self):
-        pass
+        self.ws.do = "(turn 20)"
+        self.ws.turn_neck = 0
 
 
     # PLAY MODES NOT TO OVERWRITE
