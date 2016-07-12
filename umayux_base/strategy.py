@@ -121,10 +121,12 @@ class StrategyBase(object):
             if self.ws.see is not None:
                 self.ws.see_lock.acquire()
                 try:
-                    self.choose_play_mode()
+                    if self.ws.new_state:
+                        self.choose_play_mode()
+                        self.ws.new_state = False
                 finally:
                     self.ws.see_lock.release()
-            time.sleep(0.05)
+                    time.sleep(0.05)
 
     def run(self):
         # INIT

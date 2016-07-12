@@ -3,6 +3,7 @@ import threading
 
 from parser import parse
 from state import WorldState
+from mymath import normalize_angle
 from position import triangulate_position, calculate_orientation
 
 class Something(object):
@@ -116,9 +117,14 @@ class ReceiveDataThread(threading.Thread):
                     ws.orientation += 180.0
                 else:
                     ws.position = pos
+                ws.orientation = normalize_angle(ws.orientation)
+                ws.new_state = True
                 ws.see_lock.release()
             elif msg[0] == "sense_body":
+                ws.see_lock.acquire()
                 ws.sense_body = self.msg_to_sense_body(msg)
+                ws.new_state = True
+                ws.see_lock.release()
             elif msg[0] == "hear":
                 if len(msg) >= 4 and msg[2] == "referee":
                     pm, pms = self.msg_to_play_mode(msg)
