@@ -23,7 +23,7 @@ for k in kick_powers:
     for a in turn_angles:
         kick_actions.append("(kick %d %d)" % (k, a))
 
-ACTIONS = dash_actions + turn_actions + kick_actions
+ACTIONS = dash_actions + turn_actions #+ kick_actions
 
 ################################################################################
 # CLASS
@@ -31,13 +31,16 @@ ACTIONS = dash_actions + turn_actions + kick_actions
 
 
 class DQNStrategy(SimplifiedStrategy):
+    prev_state = None
+    prev_action = None
     D = []
-    
+
     def build_state(self):
         def get_pos_in_ranges(val, ranges):
             for i, v in enumerate(ranges):
-                if val < v:
+                if val <= v:
                     return i-1
+            print "################", val, ranges
             raise Exception("This should never happen")
 
         frames = np.zeros((3,3,2))
@@ -57,10 +60,14 @@ class DQNStrategy(SimplifiedStrategy):
         return self.ws.position + [self.ws.orientation] + list(frames.reshape(-1))
 
     def playing(self):
-        if self.ws.unum == 1:
-            print self.build_state()
+        state = self.build_state()
+        reward = 0
+        if self.prev_state is not None and self.prev_action is not None:
+            self.D.append((self.prev_state, self.prev_action, state, reward))
         i = random.randint(1, len(ACTIONS)) - 1
         self.ws.do = ACTIONS[i]
+        self.prev_state = state
+        self.prev_action = self.ws.do
 
     def free_kick(self):
         self.playing()
