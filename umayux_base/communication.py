@@ -56,7 +56,7 @@ class ReceiveDataThread(threading.Thread):
                     see.goal.mine = Something(i[1], i[2])
             elif i[0][0] == "p": # player
                 if len(i[0]) >= 2 and len(i) >= 3:
-                    if i[0][1][1:-1] == ws.team_name: # [1:-1] is to remove quotes
+                    if i[0][1] == ws.team_name:
                         see.mates.append(Something(i[1], i[2]))
                     else:
                         see.opponents.append(Something(i[1], i[2]))
@@ -75,6 +75,10 @@ class ReceiveDataThread(threading.Thread):
         elif pm == "time_over":
             return pm, None
         elif pm == "drop_ball":
+            return pm, None
+        elif pm == "half_time":
+            return pm, None
+        elif pm == "time_up_without_a_team":
             return pm, None
 
         elif pm.startswith("kick_off_"):
@@ -126,10 +130,14 @@ class ReceiveDataThread(threading.Thread):
                 ws.new_state = True
                 ws.see_lock.release()
             elif msg[0] == "hear":
-                if len(msg) >= 4 and msg[2] == "referee":
+                if msg[2] == "referee":
                     pm, pms = self.msg_to_play_mode(msg)
                     ws.play_mode = pm
                     ws.play_mode_side = pms or ws.play_mode_side
+                elif msg[2] == "coach":
+                    say = msg[3]
+                    if say[0] == "reward":
+                        ws.reward = say[1]
             elif msg[0] == "warning":
                 print "################ WARNING:", msg[1]
             elif msg[0] == "player_type":

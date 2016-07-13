@@ -49,6 +49,7 @@ class WorldState(object):
         "turn": 0,
         "say": 0
     }
+    reward = 0.0
 
     position = None # [0.0, 0.0]
     orientation = 0.0

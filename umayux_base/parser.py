@@ -9,7 +9,7 @@ def isfloat(s):
 def split(s):
     ret = []
     buf = ""
-    separators = set([" ", "(", ")"])
+    separators = set([" ", "(", ")", "\'", "\""])
     for i in xrange(len(s)):
         if s[i] in separators:
             if buf != "":
