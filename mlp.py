@@ -17,16 +17,16 @@ class MLP(object):
         self.learning_rate = learning_rate
 
         rng = np.random.RandomState(1234)
-        self.W0 = shared(np.asarray(rng.uniform(-1,1,(n_input, n_hidden)), dtype=theano.config.floatX),
+        self.W0 = shared(np.asarray(rng.uniform(-0.1,0.1,(n_input, n_hidden)), dtype=theano.config.floatX),
                     borrow=True,
                     name="self.W0")
-        self.W1 = shared(np.asarray(rng.uniform(-1,1,(n_hidden, n_out)), dtype=theano.config.floatX),
+        self.W1 = shared(np.asarray(rng.uniform(-0.1,0.1,(n_hidden, n_out)), dtype=theano.config.floatX),
                     borrow=True,
                     name="self.W1")
-        self.b0 = shared(np.asarray(rng.uniform(-1,1,n_hidden), dtype=theano.config.floatX),
+        self.b0 = shared(np.asarray(rng.uniform(-0.1,0.1,n_hidden), dtype=theano.config.floatX),
                     borrow=True,
                     name="self.b0")
-        self.b1 = shared(np.asarray(rng.uniform(-1,1,n_out), dtype=theano.config.floatX),
+        self.b1 = shared(np.asarray(rng.uniform(-0.1,0.1,n_out), dtype=theano.config.floatX),
                     borrow=True,
                     name="self.b1")
 

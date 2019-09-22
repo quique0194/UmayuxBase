@@ -136,8 +136,8 @@ class ReceiveDataThread(threading.Thread):
                     ws.play_mode_side = pms or ws.play_mode_side
                 elif msg[2] == "coach":
                     say = msg[3]
-                    if say[0] == "reward":
-                        ws.reward = say[1]
+                    if say[0] == "reward" and say[1] == ws.unum:
+                        ws.reward = say[2]
             elif msg[0] == "warning":
                 print "################ WARNING:", msg[1]
             elif msg[0] == "player_type":

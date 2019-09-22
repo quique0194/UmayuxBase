@@ -36,7 +36,7 @@ ACTIONS = [""] + dash_actions + turn_actions #+ kick_actions
 
 D = []
 # mlp = MLP(111, 200, len(ACTIONS))
-mlp = MLP(9, 100, len(ACTIONS))
+mlp = MLP(6, 100, len(ACTIONS))
 mlp_hat = mlp.clone()
 mlp_lock = threading.Lock()
 
@@ -88,7 +88,6 @@ class DQNStrategy(SimplifiedStrategy):
     def playing(self):
         global D, mlp, ACTIONS
         state = self.build_state()
-        print "STATE LEN", len(state)
         reward = self.get_reward()
         if self.prev_state is not None and self.prev_action is not None:
             D.append((self.prev_state, self.prev_action, state, reward))
@@ -102,7 +101,6 @@ class DQNStrategy(SimplifiedStrategy):
             # print "QVAL", qval[0]
             i = np.argmax(qval[0])
         self.ws.do = ACTIONS[i]
-        print self.ws.do
         self.prev_state = state
         self.prev_action = self.ws.do
 
@@ -133,12 +131,14 @@ def get_batch(dataset, n):
 if __name__ == "__main__":
     class DQNThread(threading.Thread):
         def run(self):
+            alpha = 1
             while True:
                 global D, mlp, ACTIONS, mlp_hat
                 for i in range(500):
-                    print "I", i
-                    if len(D) > 100:
-                        D = D[-500:]
+                    alpha = alpha*0.9999999
+                    print "alpha:", alpha
+                    # if len(D) > 100:
+                    #     D = D[-500:]
                     tam = min(len(D), 10)
                     if tam > 0:
                         # print "#", len(D)
@@ -147,15 +147,15 @@ if __name__ == "__main__":
                         qval = mlp_hat.predict(states_t1)
                         mlp_lock.release()
                         maxqval = qval.max(axis=1)
-                        y = 0.9*rewards + 0.1*maxqval
+                        y = alpha*rewards + (1-alpha)*maxqval
                         actions_idx = map(lambda x: ACTIONS.index(x), actions)
                         mlp_lock.acquire()
                         qval = mlp.predict(states_t0)
                         print "val", qval
                         qval[np.arange(len(qval)), actions_idx] = y
                         mlp.train(states_t0, qval)
-                        print "r", rewards
-                        print "Y", qval
+                        # print "r", rewards
+                        # print "Y", qval
                         mlp_lock.release()
                 mlp_hat = mlp.clone()
 
@@ -163,6 +163,5 @@ if __name__ == "__main__":
     dqn_thread.daemon = True
     dqn_thread.start()
 
-    print "$$$$$$$$$$$$$", len(ACTIONS)
     s = DQNStrategy()
     s.run()
